@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <!-- SEO Tags -->
+  <title>GlobalFX Pro - Real-Time Global Currency Exchange & Analytics Platform</title>
+  <meta name="description" content="A professional real-time currency converter, historical rate visualizer, volatility assessor, and top mover tracker. Secure data engine with local storage backup and CSV export.">
+  <meta name="author" content="Tanmay Tyagi">
+  
+  <!-- Favicon styling -->
+  <link rel="icon" type="image/png" href="https://flagcdn.com/w40/us.png">
+
+  <!-- Core and Component styling -->
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/animations.css">
+  <link rel="stylesheet" href="css/responsive.css">
+  
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+  <!-- ==========================================================================
+       Header Block
+       ========================================================================== -->
+  <header class="app-header">
+    <div class="logo-container">
+      <div class="logo-icon">⇄</div>
+      <div class="logo-text">
+        GlobalFX Pro
+        <span>Global Currency & Analytics</span>
+      </div>
+    </div>
+    
+    <div class="header-actions">
+      <div class="status-badge" id="status-badge-container">
+        <span class="status-dot"></span>
+        <span id="connection-status">Connecting...</span>
+      </div>
+      <button class="theme-toggle-btn" id="theme-toggle-trigger" aria-label="Toggle light/dark mode" title="Switch Theme">
+        🌙
+      </button>
+    </div>
+  </header>
+
+  <!-- ==========================================================================
+       Tab Navigation
+       ========================================================================== -->
+  <nav class="navigation-bar">
+    <a href="#" class="nav-tab active" data-view="dashboard" id="nav-dashboard">
+      📊 Dashboard
+    </a>
+    <a href="#" class="nav-tab" data-view="converter" id="nav-converter">
+      💱 Converter Logs
+    </a>
+    <a href="#" class="nav-tab" data-view="analytics" id="nav-analytics">
+      📈 Market Insights
+    </a>
+  </nav>
+
+  <!-- ==========================================================================
+       Main View Controller
+       ========================================================================== -->
+  <main class="main-content">
+    
+    <!-- ==========================================================================
+         View 1: Dashboard
+         ========================================================================== -->
+    <section class="view-section active" id="dashboard-section">
+      
+      <!-- Metrics Card Grid -->
+      <div class="metrics-grid">
+        <div class="glass-card metric-card card-lift">
+          <span class="metric-label">Total Conversions</span>
+          <span class="metric-value" id="card-total-conversions">0</span>
+          <span class="metric-trend trend-up">📈 Local History</span>
+        </div>
+        <div class="glass-card metric-card card-lift">
+          <span class="metric-label">Currencies Supported</span>
+          <span class="metric-value" id="card-currencies-supported">0</span>
+          <span class="metric-trend" style="color:var(--color-primary);">⇄ Worldwide API</span>
+        </div>
+        <div class="glass-card metric-card card-lift">
+          <span class="metric-label">Most Active Currency</span>
+          <span class="metric-value" id="card-most-active-currency">N/A</span>
+          <span class="metric-trend trend-up" style="color:var(--text-muted);">★ Most Popular</span>
+        </div>
+        <div class="glass-card metric-card card-lift">
+          <span class="metric-label">Average Amount</span>
+          <span class="metric-value" id="card-avg-amount">$0.00</span>
+          <span class="metric-trend" style="color:var(--color-primary);">✦ Scaled to USD</span>
+        </div>
+      </div>
+
+      <!-- Quick Convert & Historical Chart Grid -->
+      <div class="converter-container">
+        
+        <!-- Converter Block -->
+        <div class="glass-card converter-card">
+          <div class="card-header">
+            <div>
+              <h2 class="card-title">Exchange Currencies</h2>
+              <p class="card-subtitle">Real-time currency converter module</p>
+            </div>
+            <button class="favorite-pair-btn" id="favorite-pair-trigger" title="Save currency pair to favorites">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle;">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+              </svg>
+              <span>Add to Favorites</span>
+            </button>
+          </div>
+          
+          <div class="input-group-row">
+            <div class="converter-input-wrapper">
+              <label for="converter-amount-from" class="input-label">Amount</label>
+              <input type="number" id="converter-amount-from" class="currency-input" placeholder="0.00" value="1000" min="0">
+            </div>
+            <div id="from-currency-selector">
+              <!-- Searchable selector rendered here -->
+            </div>
+          </div>
+
+          <div class="swap-btn-container">
+            <button id="swap-currencies-btn" class="swap-button" aria-label="Swap from and to currencies" title="Swap Currencies">
+              <svg viewBox="0 0 24 24">
+                <path d="M19 14l4 4-4 4v-3H3v-2h16v-3M5 10V7h16V5H5V2L1 6l4 4z"/>
+              </svg>
+            </button>
+          </div>
+
+          <div class="input-group-row">
+            <div class="converter-input-wrapper" style="opacity: 0.85;">
+              <label for="converter-amount-to" class="input-label">Converted Estimate</label>
+              <input type="number" id="converter-amount-to" class="currency-input" placeholder="0.00" readonly>
+            </div>
+            <div id="to-currency-selector">
+              <!-- Searchable selector rendered here -->
+            </div>
+          </div>
+
+          <div id="exchange-rate-details" style="font-size: 0.9rem; color: var(--text-secondary); text-align: center; margin: 5px 0;">
+            Calculating exchange rates...
+          </div>
+
+          <button id="convert-btn-trigger" class="convert-button">
+            Convert & Save Transaction
+          </button>
+
+          <!-- Volatility Pill -->
+          <div id="converter-volatility-box" style="margin-top: 10px;"></div>
+        </div>
+
+        <!-- Historical Rate Chart Block -->
+        <div class="glass-card chart-panel-card">
+          <div class="chart-info-header">
+            <div>
+              <h2 class="card-title" id="chart-currency-pair">USD / EUR Trend</h2>
+              <p class="card-subtitle">Interactive market analysis and rates tracker</p>
+            </div>
+            
+            <div class="timeframe-controls" role="group" aria-label="Chart Timeframe selector">
+              <button class="timeframe-btn" data-period="24H">24H</button>
+              <button class="timeframe-btn" data-period="7D">7D</button>
+              <button class="timeframe-btn active" data-period="30D">30D</button>
+              <button class="timeframe-btn" data-period="90D">90D</button>
+              <button class="timeframe-btn" data-period="1Y">1Y</button>
+            </div>
+          </div>
+
+          <div class="chart-current-stat">
+            <div class="chart-rate-val" id="chart-rate-value">0.9240</div>
+            <div class="chart-change-pct trend-up" id="chart-change-percentage">+0.00%</div>
+          </div>
+
+          <div class="chart-wrapper">
+            <canvas id="fx-history-chart"></canvas>
+          </div>
+
+          <!-- Trend Analysis Module (24H, 7D, 30D, 1Y) -->
+          <div id="trend-analysis-panel" style="margin-top: 16px; border-top: 1px solid var(--border-color); padding-top: 16px;"></div>
+        </div>
+      </div>
+
+      <!-- Volatility Analysis & Movers Dashboard -->
+      <div class="insights-grid">
+        
+        <!-- Top Currency Movers -->
+        <div class="glass-card">
+          <div class="card-header">
+            <div>
+              <h3 class="card-title">Top Movers (24H)</h3>
+              <p class="card-subtitle">Highest gaining and losing currencies relative to USD</p>
+            </div>
+          </div>
+          
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+            <div>
+              <span class="input-label" style="display:block; margin-bottom: 8px; color: var(--color-success);">🟢 Top Gainers</span>
+              <div id="top-gainers-list" class="movers-list"></div>
+            </div>
+            <div>
+              <span class="input-label" style="display:block; margin-bottom: 8px; color: var(--color-danger);">🔴 Top Losers</span>
+              <div id="top-losers-list" class="movers-list"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Curated Volatility Guide -->
+        <div class="glass-card">
+          <div class="card-header">
+            <div>
+              <h3 class="card-title">Currency Risk & Volatility Analysis</h3>
+              <p class="card-subtitle">Understanding historical instability & volatility risk</p>
+            </div>
+          </div>
+          
+          <div class="volatility-list">
+            <div class="vol-card vol-low">
+              <div>
+                <strong style="display:block;">USD / INR Pair</strong>
+                <span class="card-subtitle">Stable trade pegging, strong capital inflows</span>
+              </div>
+              <span class="vol-risk-pill">🟢 Low Vol (Risk: 2/10)</span>
+            </div>
+            
+            <div class="vol-card vol-medium">
+              <div>
+                <strong style="display:block;">EUR / USD Pair</strong>
+                <span class="card-subtitle">Highly liquid pair, sensitive to inflation indexes</span>
+              </div>
+              <span class="vol-risk-pill">🟡 Med Vol (Risk: 5/10)</span>
+            </div>
+
+            <div class="vol-card vol-high">
+              <div>
+                <strong style="display:block;">GBP / JPY Pair</strong>
+                <span class="card-subtitle">High yield differential, carry-trades risk exposure</span>
+              </div>
+              <span class="vol-risk-pill">🔴 High Vol (Risk: 8/10)</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ==========================================================================
+         View 2: Converter & History logs
+         ========================================================================== -->
+    <section class="view-section" id="converter-section">
+      <div class="glass-card" style="margin-bottom: 24px; max-width: 800px; margin-left: auto; margin-right: auto;">
+        <h2 class="card-title" style="margin-bottom: 16px;">Conversion Engine & Logs</h2>
+        <p class="card-subtitle" style="margin-bottom: 24px;">Your logged conversion history is kept fully secured in your local browser sandbox. You can download your data at any time.</p>
+        
+        <!-- Dynamic table actions -->
+        <div class="card-header" style="margin-bottom: 12px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px;">
+          <h3 class="card-title">Audit History Log</h3>
+          <div class="action-button-row">
+            <button id="csv-export-btn" class="btn-secondary" title="Export conversion history as CSV file">
+              📥 Export CSV
+            </button>
+            <button id="clear-history-btn" class="btn-secondary" style="color:var(--color-danger); border-color:rgba(239, 68, 68, 0.2);" title="Wipe out local conversion log database">
+              🗑 Clear All
+            </button>
+          </div>
+        </div>
+
+        <div id="conversion-history-list" class="history-section">
+          <!-- Populated programmatically -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================================================
+         View 3: Analytics Detailed Board
+         ========================================================================== -->
+    <section class="view-section" id="analytics-section">
+      
+      <!-- Supplementary stats cards -->
+      <div class="metrics-grid">
+        <div class="glass-card metric-card card-lift">
+          <span class="metric-label">Favorite Pair</span>
+          <span class="metric-value" id="card-favorite-pair" style="font-size: 1.6rem;">USD/EUR</span>
+          <span class="metric-trend" style="color:var(--color-warning);">★ Saved Pair</span>
+        </div>
+        <div class="glass-card metric-card card-lift">
+          <span class="metric-label">Conversion Accuracy</span>
+          <span class="metric-value" id="card-accuracy">99.99%</span>
+          <span class="metric-trend trend-up">🟢 Active Feeds</span>
+        </div>
+        <div class="glass-card metric-card card-lift">
+          <span class="metric-label">Engine Updates</span>
+          <span class="metric-value" style="font-size: 1.5rem;">5 Minutes</span>
+          <span class="metric-trend" style="color:var(--color-primary);">⚡ Rate Limit Safe</span>
+        </div>
+      </div>
+
+      <!-- Market Overview Grid -->
+      <h2 style="font-size: 1.3rem; margin-bottom: 16px; margin-top: 16px; font-family: var(--font-display);">Market Overview</h2>
+      <div class="metrics-grid" style="margin-bottom: 24px;">
+        <div class="glass-card metric-card card-lift">
+          <span class="metric-label">Strongest Currency</span>
+          <span class="metric-value" id="market-strongest" style="font-size: 1.4rem;">USD</span>
+          <span class="metric-trend trend-up">🟢 Vs USD Base</span>
+        </div>
+        <div class="glass-card metric-card card-lift">
+          <span class="metric-label">Weakest Currency</span>
+          <span class="metric-value" id="market-weakest" style="font-size: 1.4rem;">N/A</span>
+          <span class="metric-trend trend-down">🔴 Vs USD Base</span>
+        </div>
+        <div class="glass-card metric-card card-lift">
+          <span class="metric-label">Most Traded Pair</span>
+          <span class="metric-value" id="market-traded" style="font-size: 1.4rem;">USD / EUR</span>
+          <span class="metric-trend" style="color:var(--color-primary);">⇄ Highest Volume</span>
+        </div>
+        <div class="glass-card metric-card card-lift">
+          <span class="metric-label">Most Volatile Asset</span>
+          <span class="metric-value" id="market-volatile" style="font-size: 1.4rem;">TRY</span>
+          <span class="metric-trend" style="color:var(--color-danger);">🔴 Volatility Index</span>
+        </div>
+      </div>
+
+      <!-- Multi-currency Comparison Dashboard Table -->
+      <div class="glass-card" style="margin-bottom: 24px;">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title">Multi-Currency Comparison Dashboard</h2>
+            <p class="card-subtitle">Cross comparison of major currencies against base currency: <strong id="comparison-base-label">USD</strong></p>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="fx-table">
+            <thead>
+              <tr>
+                <th>Currency pair</th>
+                <th>Current Exchange Rate</th>
+                <th>Daily Change (24H)</th>
+                <th>Weekly Change (7D)</th>
+              </tr>
+            </thead>
+            <tbody id="comparison-table-body">
+              <!-- Rendered dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- ==========================================================================
+       Footer Layout
+       ========================================================================== -->
+  <footer class="app-footer">
+    <p><strong>GlobalFX Pro</strong> &bull; Real-Time Global Currency Exchange & Analytics Platform</p>
+    <p>Developed with passion by <strong>Tanmay Tyagi</strong> &bull; License: <strong>MIT License</strong></p>
+    <p style="font-size: 0.75rem; margin-top: 8px;">Rates sourced securely via free endpoints. Historical variations simulated for high-fidelity presentation.</p>
+  </footer>
+
+  <!-- Code execution scripts -->
+  <script src="js/storage.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/export.js"></script>
+  <script src="js/analytics.js"></script>
+  <script src="js/charts.js"></script>
+  <script src="js/converter.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
