@@ -106,12 +106,89 @@ function refreshDashboard() {
   // 5. Market Insights
   const marketOverview = AnalyticsManager.getMarketOverview(appState.rates);
   uiManager.renderMarketOverview(marketOverview);
+
+  // 6. Update Portfolio if active
+  if (typeof refreshPortfolio === "function") refreshPortfolio();
 }
 
 /**
  * App initialization orchestrator
  */
 async function initializeApplication() {
+  // --- NEW PORTFOLIO BINDINGS ---
+  window.refreshPortfolio = function() {
+    const analytics = PortfolioManager.getAnalytics(appState.rates, appState.fromCurrency);
+    const valEl = document.getElementById("portfolio-total-value");
+    const roiEl = document.getElementById("portfolio-total-roi");
+    
+    if (valEl) valEl.textContent = `$${analytics.currentValue.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+    if (roiEl) {
+      const roiSign = analytics.roi >= 0 ? '+' : '';
+      roiEl.textContent = `${roiSign}${analytics.roi.toFixed(2)}%`;
+    }
+    
+    const tbody = document.getElementById("portfolio-table-body");
+    if (tbody) {
+      tbody.innerHTML = "";
+      StorageManager.getPortfolio().forEach(h => {
+        
+        // Calculate live individual metrics
+        const rateBase = appState.rates[appState.fromCurrency] || 1;
+        const rateTarget = appState.rates[h.currency] || 1;
+        const liveRate = rateTarget / rateBase;
+        
+        const invested = h.amount / h.purchaseRate;
+        const currentVal = h.amount / liveRate;
+        const indvRoi = ((currentVal - invested) / invested) * 100;
+        
+        const roiColor = indvRoi >= 0 ? 'var(--color-success)' : 'var(--color-danger)';
+        const roiSign = indvRoi >= 0 ? '+' : '';
+        
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>
+            <div style="display:flex; align-items:center; gap:12px;">
+              <div style="width: 36px; height: 36px; border-radius: 8px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:0.85rem; color: var(--text-primary);">
+                ${h.currency}
+              </div>
+              <span style="font-weight: 600; font-size: 1.05rem;">${h.currency}</span>
+            </div>
+          </td>
+          <td style="font-family: var(--font-display); font-size: 1.05rem;">${h.amount.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+          <td style="color: var(--text-secondary);">${h.purchaseRate.toFixed(4)}</td>
+          <td style="font-family: var(--font-display); font-weight: bold; font-size: 1.05rem;">$${currentVal.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+          <td style="color: ${roiColor}; font-weight: bold; font-size: 1.05rem;">${roiSign}${indvRoi.toFixed(2)}%</td>
+          <td style="text-align: right;">
+            <button onclick="PortfolioManager.deleteHolding(${h.id}); refreshPortfolio();" class="btn-secondary" style="padding: 6px 14px; color: var(--color-danger); border-color: rgba(239, 68, 68, 0.15); background: rgba(239, 68, 68, 0.05);">
+              Close
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+  };
+
+  const addHoldingBtn = document.getElementById("add-holding-btn");
+  if (addHoldingBtn) {
+    addHoldingBtn.addEventListener("click", () => {
+      const cur = document.getElementById("hold-currency").value;
+      const amt = document.getElementById("hold-amount").value;
+      const rate = document.getElementById("hold-rate").value;
+      
+      if(cur && amt && rate) {
+        PortfolioManager.addHolding(cur, amt, rate);
+        if (uiManager) uiManager.showToast("Holding added to portfolio!", "success");
+        refreshPortfolio();
+        
+        // Clear inputs
+        document.getElementById("hold-currency").value = "";
+        document.getElementById("hold-amount").value = "";
+        document.getElementById("hold-rate").value = "";
+      }
+    });
+  }
+
   // Bind inputs value changed
   const fromAmountInput = document.getElementById("converter-amount-from");
   if (fromAmountInput) {
@@ -140,6 +217,9 @@ async function initializeApplication() {
       const currentRate = (appState.rates[appState.toCurrency] || 1) / (appState.rates[appState.fromCurrency] || 1);
       uiManager.updateConversionDisplay(currentRate, appState.fromCurrency, appState.toCurrency);
       uiManager.updateVolatilityDisplay(appState.fromCurrency, appState.toCurrency);
+      
+      // Update portfolio on base currency change
+      refreshPortfolio();
     },
     
     onSwap: () => {
@@ -150,6 +230,9 @@ async function initializeApplication() {
       const currentRate = (appState.rates[appState.toCurrency] || 1) / (appState.rates[appState.fromCurrency] || 1);
       uiManager.updateConversionDisplay(currentRate, appState.fromCurrency, appState.toCurrency);
       uiManager.updateVolatilityDisplay(appState.fromCurrency, appState.toCurrency);
+      
+      // Update portfolio on base currency change
+      refreshPortfolio();
     },
 
     onThemeChange: (isDark) => {
