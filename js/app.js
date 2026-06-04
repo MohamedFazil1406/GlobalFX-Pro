@@ -251,5 +251,16 @@ async function initializeApplication() {
   }, 300000);
 }
 
+// ---- Service Worker Registration (PWA) ------------------------------------
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').then((reg) => {
+      console.log('[PWA] Service Worker registered:', reg.scope);
+    }).catch((err) => {
+      console.warn('[PWA] Service Worker registration failed:', err);
+    });
+  });
+}
+
 // Fire launch on load
 document.addEventListener("DOMContentLoaded", initializeApplication);
