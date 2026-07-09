@@ -5,6 +5,18 @@
 class PortfolioManager {
   static addHolding(currency, amount, purchaseRate) {
     const portfolio = StorageManager.getPortfolio();
+
+    const existingHolding = portfolio.find(
+      (h) => h.currency === currency.toUpperCase(),
+    );
+
+    if (existingHolding) {
+      return {
+        success: false,
+        message: "Asset already exists.",
+      };
+    }
+
     portfolio.push({
       id: Date.now(),
       currency: currency.toUpperCase(),
@@ -12,7 +24,9 @@ class PortfolioManager {
       purchaseRate: parseFloat(purchaseRate),
       date: new Date().toISOString(),
     });
+
     StorageManager.savePortfolio(portfolio);
+    return { success: true, message: "Holding added successfully." };
   }
 
   static updateHolding(id, updatedData) {

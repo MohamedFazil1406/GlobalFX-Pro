@@ -220,7 +220,6 @@ async function initializeApplication() {
 
   const addHoldingBtn = document.getElementById("add-holding-btn");
   addHoldingBtn.addEventListener("click", () => {
-    console.log("Portfolio validation started");
     const cur = document
       .getElementById("hold-currency")
       .value.trim()
@@ -248,7 +247,14 @@ async function initializeApplication() {
     }
 
     if (editingHoldingId === null) {
-      PortfolioManager.addHolding(cur, amt, rate);
+      console.log("Adding new holding:");
+      const result = PortfolioManager.addHolding(cur, amt, rate);
+
+      if (!result.success) {
+        uiManager.showToast(result.message, "warning");
+        return;
+      }
+
       uiManager.showToast("Holding added to portfolio!", "success");
     } else {
       PortfolioManager.updateHolding(editingHoldingId, {
