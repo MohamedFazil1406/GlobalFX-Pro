@@ -220,6 +220,7 @@ async function initializeApplication() {
 
   const addHoldingBtn = document.getElementById("add-holding-btn");
   addHoldingBtn.addEventListener("click", () => {
+    console.log("Portfolio validation started");
     const cur = document
       .getElementById("hold-currency")
       .value.trim()
