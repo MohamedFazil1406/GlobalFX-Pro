@@ -159,12 +159,26 @@ async function initializeApplication() {
     );
     const valEl = document.getElementById("portfolio-total-value");
     const roiEl = document.getElementById("portfolio-total-roi");
+    const holdingsEl = document.getElementById("portfolio-total-holdings");
+    const bestPerformerEl = document.getElementById("portfolio-best-performer");
 
     if (valEl)
       valEl.textContent = `$${analytics.currentValue.toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
     if (roiEl) {
       const roiSign = analytics.roi >= 0 ? "+" : "";
       roiEl.textContent = `${roiSign}${analytics.roi.toFixed(2)}%`;
+    }
+
+    if (holdingsEl) {
+      holdingsEl.textContent = analytics.totalHoldings;
+    }
+
+    if (bestPerformerEl) {
+      if (analytics.bestPerformer) {
+        bestPerformerEl.textContent = `${analytics.bestPerformer} (${analytics.bestROI.toFixed(2)}%)`;
+      } else {
+        bestPerformerEl.textContent = "-";
+      }
     }
 
     const tbody = document.getElementById("portfolio-table-body");

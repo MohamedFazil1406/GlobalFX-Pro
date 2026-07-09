@@ -48,28 +48,49 @@ class PortfolioManager {
 
   static getAnalytics(rates, baseCurrency = "USD") {
     const portfolio = StorageManager.getPortfolio();
+
+    const totalHoldings = portfolio.length;
+
     let totalInvested = 0;
     let currentValue = 0;
 
+    let bestPerformer = null;
+    let bestROI = -Infinity;
+
     portfolio.forEach((h) => {
-      // Calculate how much base currency this was worth when bought
+      // Amount invested
       const invested = h.amount / h.purchaseRate;
       totalInvested += invested;
 
-      // Calculate how much it is worth now
+      // Current value
       const rateBase = rates[baseCurrency] || 1;
       const rateTarget = rates[h.currency] || 1;
-
-      // Calculate current rate relative to base currency
       const currentRate = rateTarget / rateBase;
       const current = h.amount / currentRate;
+
       currentValue += current;
+
+      // Individual ROI
+      const holdingROI = ((current - invested) / invested) * 100;
+
+      if (holdingROI > bestROI) {
+        bestROI = holdingROI;
+        bestPerformer = h.currency;
+      }
     });
 
     const roi =
       totalInvested > 0
         ? ((currentValue - totalInvested) / totalInvested) * 100
         : 0;
-    return { totalInvested, currentValue, roi };
+
+    return {
+      totalInvested,
+      currentValue,
+      roi,
+      totalHoldings,
+      bestPerformer,
+      bestROI,
+    };
   }
 }
